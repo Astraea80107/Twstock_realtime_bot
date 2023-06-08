@@ -78,5 +78,5 @@ def handle_message(event):
         TextSendMessage(text=realtime(event.message.text)))
 
 
-if __name__ == "__main__":realtime
+if __name__ == "__main__":
     app.run()
