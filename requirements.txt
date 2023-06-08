@@ -1,3 +1,3 @@
 Flask == 2.2.2
 line-bot-sdk
-beautifulsoup4
+twstock
