@@ -10,50 +10,46 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
 
-import requests
-from bs4 import BeautifulSoup
-import random
+import twstock
 
-def sign(thing):
-    random_number = random.randrange(60)
+twstock.realtime.mock = False
 
-    url = f"https://qiangua.temple01.com/qianshi.php?t=fs60&s={random_number}"
+def realtime(stock_id):    
+    stock_info = twstock.realtime.get(stock_id)
 
-    html = requests.get(url)
-    html.encoding = "utf-8"
+    if stock_info['success'] == True:
+        best_bid_price = stock_info['realtime']['best_bid_price']
+        best_bid_volume = stock_info['realtime']['best_bid_volume']
+        best_ask_price = stock_info['realtime']['best_ask_price']
+        best_ask_volume = stock_info['realtime']['best_ask_volume']
 
-    sp = BeautifulSoup(html.content,"html.parser")
+        msg = (f"""{stock_id}即時股價資訊
 
-    title1 = sp.find_all("div",class_="fs_poetry_w_top")[0].text
-    title2 = sp.find_all("div",class_="fs_poetry_w_top")[1].text
-    title3 = sp.find_all("div",class_="fs_poetry_w_top")[2].text.split("\t")[3].split("\n")[0].replace(" ","\n")
-    title4 = sp.find_all("div",class_="fs_poetry_w_top")[2].text.split("\t")[3].split("\n")[1]
-    main = sp.find("div",class_="fs_poetry_w_text").text
-    explain1 = sp.find("div",class_="fs_box fs_left").text.split("\t")[0]
-    explain2 = sp.find_all("div",class_="fs_box fs_left")[1].text.split("\t")[0]
-
-    msg = (f"""{title1}
-
-{title2}
-{title3}
-{title4}
-      
-籤詩
-{main}
-
-語譯
-{explain1}
-
-籤意
-{explain2}
+股票名稱: {stock_info['info']['name']}
+股票代碼: {stock_info['info']['code']}
+資料時間: {stock_info['info']['time']}
+當前股價: {stock_info['realtime']['latest_trade_price']}
+開盤價: {float(stock_info['realtime']['open']):.2f}
+最高價: {float(stock_info['realtime']['high']):.2f}
+最低價: {float(stock_info['realtime']['low']):.2f}
+當前交易量: {stock_info['realtime']['trade_volume']}
+累積交易量: {stock_info['realtime']['accumulate_trade_volume']}
+當前5筆成交價: {float(best_bid_price[0]):.2f}, {float(best_bid_price[1]):.2f}, {float(best_bid_price[2]):.2f}, {float(best_bid_price[3]):.2f}, {float(best_bid_price[4]):.2f}
+當前5筆成交量: {int(best_bid_volume[0])}, {int(best_bid_volume[1])}, {int(best_bid_volume[2])}, {int(best_bid_volume[3])}, {int(best_bid_volume[4])}
+最佳5筆成交價: {float(best_ask_price[0]):.2f}, {float(best_ask_price[1]):.2f}, {float(best_ask_price[2]):.2f}, {float(best_ask_price[3]):.2f}, {float(best_ask_price[4]):.2f}
+最佳5筆成交量: {int(best_ask_volume[0])}, {int(best_ask_volume[1])}, {int(best_ask_volume[2])}, {int(best_ask_volume[3])}, {int(best_ask_volume[4])}
 """)
 
-    return msg
+        return msg
+    else:
+        error = "Data not found"
+
+        return error
 
 app = Flask(__name__)
 
-line_bot_api = LineBotApi('30fHYzc70eBZEscXrgWyuW0QQMPVGPd4R+CLHhdJAeokJrgn5OlH+TxOcfAzdvxErPxRtvmc6kDr5gvrrm31urWPPayGhThQvwbZ0E79cWH+8M2pjXbtiAgzvwoHX+BcHRnozscUh8i6LIZaUU1zZAdB04t89/1O/w1cDnyilFU=')
-handler1 = WebhookHandler('b2a58c0974beadd965204bda652ced11')
+line_bot_api = LineBotApi('S5nw445xmRrBSubt35PFZ6kFb3pTYd5tkI+Dek4Rycq5+I29Kx6633HDHHN0S3KG9QOdvwGJilf6ujdGs2F2RuqIAH8dSfnP2WKRtBx4jXe7C2GDBqDBYIzFENoe37Ct1bXmwoJsT2EiBhGSPJRPhQdB04t89/1O/w1cDnyilFU=')
+handler1 = WebhookHandler('04c62a547006bc111ebf5962dfa87eb5')
 
 
 @app.route("/callback", methods=['POST'])
